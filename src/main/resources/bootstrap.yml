@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: prod-pasive-ms-dev
+  cloud:
+    config:
+      uri: http://localhost:8888
