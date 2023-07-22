@@ -20,4 +20,5 @@ public class AccountDao {
     private AccountType type;
     private BigDecimal balance;
     private AccountCategory accountCategory;
+    private String client;
 }
