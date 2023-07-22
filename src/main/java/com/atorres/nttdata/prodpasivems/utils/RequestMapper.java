@@ -17,6 +17,16 @@ public class RequestMapper {
                 .accountCategory(requestAccount.getAccountCategory())
                 .build();
     }
+
+    public AccountDto accountToDto(RequestAccount requestAccount,String clientId){
+        AccountDto accountDto= new AccountDto();
+        accountDto.setId(generateId());
+        accountDto.setType(requestAccount.getType());
+        accountDto.setAccountCategory(requestAccount.getAccountCategory());
+        accountDto.setBalance(requestAccount.getBalance());
+        accountDto.setClient(clientId);
+        return accountDto;
+    }
     public AccountDto accountToDto(AccountDao accountDao){
         AccountDto accountDto= new AccountDto();
         accountDto.setId(accountDto.getId());

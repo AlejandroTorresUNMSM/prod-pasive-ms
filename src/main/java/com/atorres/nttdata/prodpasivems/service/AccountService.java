@@ -2,6 +2,7 @@ package com.atorres.nttdata.prodpasivems.service;
 
 import com.atorres.nttdata.prodpasivems.client.ClientApiClient;
 import com.atorres.nttdata.prodpasivems.client.ClientApiProdActive;
+import com.atorres.nttdata.prodpasivems.client.FeignApiClient;
 import com.atorres.nttdata.prodpasivems.exception.CustomException;
 import com.atorres.nttdata.prodpasivems.model.RequestAccount;
 import com.atorres.nttdata.prodpasivems.model.RequestUpdateAccount;
@@ -30,8 +31,8 @@ public class AccountService {
 	/**
 	 * Cliente conecta cliente-microservice
 	 */
-  @Autowired
-  private ClientApiClient clientApiClient;
+	@Autowired
+	private FeignApiClient feignApiClient;
 	/**
 	 * Cliente conecta cliente-microservice
 	 */
@@ -70,15 +71,16 @@ public class AccountService {
    */
   public Mono<AccountDto> createAccount(String clientId, RequestAccount requestAccount) {
     //obtenemos el cliente
-    return clientApiClient.getClientById(clientId)
+    return feignApiClient.getClient(clientId)
+						.single()
             .switchIfEmpty(Mono.error(new CustomException(HttpStatus.NOT_FOUND, "El cliente no existe")))
-            .flatMap(clientdao -> {
+            .flatMap(clientdto -> {
               //obtenemos todas las cuentas agregando la nueva
-							AccountDao ac = requestMapper.accountToDao(requestAccount);
-              Flux<AccountDao> accountAll = this.getAllAccountsByClient(clientId).concatWith(Flux.just(ac));
+							AccountDto ac = requestMapper.accountToDto(requestAccount,clientId);
+              Flux<AccountDto> accountAll = this.getAllAccountsByClient(clientId).concatWith(Flux.just(ac));
               //seleccionamos la estrategia para el tipo de cliente
 
-              AccountStrategy strategy = accountStrategyFactory.getStrategy(clientdao.getTypeClient());
+              AccountStrategy strategy = accountStrategyFactory.getStrategy(clientdto.getTypeClient());
               return strategy.verifyClient(accountAll, Mono.just(requestAccount.getAccountCategory()), this.getAllCredit(clientId));
             })
 						.flatMap(exist -> Boolean.FALSE.equals(exist)
@@ -92,9 +94,11 @@ public class AccountService {
    * @param clientId id de cliente
    * @return devuelve una lista de cuentas
    */
-  public Flux<AccountDao> getAllAccountsByClient(String clientId) {
+  public Flux<AccountDto> getAllAccountsByClient(String clientId) {
     return accountRepository.findAll()
-						.filter(ac -> ac.getClient().equals(clientId));
+						.filter(ac -> ac.getClient().equals(clientId))
+						.map(requestMapper::accountToDto)
+						.switchIfEmpty(Flux.empty());
   }
 
   /**
