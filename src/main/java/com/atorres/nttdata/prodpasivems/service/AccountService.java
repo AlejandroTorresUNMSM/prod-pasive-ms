@@ -1,12 +1,12 @@
 package com.atorres.nttdata.prodpasivems.service;
 
-import com.atorres.nttdata.prodpasivems.client.ClientApiClient;
-import com.atorres.nttdata.prodpasivems.client.ClientApiProdActive;
 import com.atorres.nttdata.prodpasivems.client.FeignApiClient;
+import com.atorres.nttdata.prodpasivems.client.FeignApiProdActive;
 import com.atorres.nttdata.prodpasivems.exception.CustomException;
 import com.atorres.nttdata.prodpasivems.model.RequestAccount;
 import com.atorres.nttdata.prodpasivems.model.RequestUpdateAccount;
-import com.atorres.nttdata.prodpasivems.model.creditms.CreditDao;
+import com.atorres.nttdata.prodpasivems.model.clientms.ClientDto;
+import com.atorres.nttdata.prodpasivems.model.creditms.CreditDto;
 import com.atorres.nttdata.prodpasivems.model.dao.AccountDao;
 import com.atorres.nttdata.prodpasivems.model.dto.AccountDto;
 import com.atorres.nttdata.prodpasivems.repository.AccountRepository;
@@ -29,15 +29,15 @@ public class AccountService {
   @Autowired
   private AccountRepository accountRepository;
 	/**
-	 * Cliente conecta cliente-microservice
+	 * Cliente conecta cliente-ms
 	 */
 	@Autowired
 	private FeignApiClient feignApiClient;
 	/**
-	 * Cliente conecta cliente-microservice
+	 * Cliente conecta prod-active-ms
 	 */
 	@Autowired
-	private ClientApiProdActive clientApiProdActive;
+	private FeignApiProdActive feignApiProdActive;
 	/**
 	 * Mapper de cuentas
 	 */
@@ -71,15 +71,13 @@ public class AccountService {
    */
   public Mono<AccountDto> createAccount(String clientId, RequestAccount requestAccount) {
     //obtenemos el cliente
-    return feignApiClient.getClient(clientId)
-						.single()
+    return this.checkDebts(clientId)
             .switchIfEmpty(Mono.error(new CustomException(HttpStatus.NOT_FOUND, "El cliente no existe")))
             .flatMap(clientdto -> {
               //obtenemos todas las cuentas agregando la nueva
 							AccountDto ac = requestMapper.accountToDto(requestAccount,clientId);
               Flux<AccountDto> accountAll = this.getAllAccountsByClient(clientId).concatWith(Flux.just(ac));
               //seleccionamos la estrategia para el tipo de cliente
-
               AccountStrategy strategy = accountStrategyFactory.getStrategy(clientdto.getTypeClient());
               return strategy.verifyClient(accountAll, Mono.just(requestAccount.getAccountCategory()), this.getAllCredit(clientId));
             })
@@ -133,8 +131,23 @@ public class AccountService {
 	 * @param clientId id cliente
 	 * @return cuentas
 	 */
-  private Flux<CreditDao> getAllCredit(String clientId) {
-    return clientApiProdActive.getCreditByClient(clientId);
+  private Flux<CreditDto> getAllCredit(String clientId) {
+    return feignApiProdActive.getAllCreditClient(clientId);
   }
 
+	/**
+	 * Metodo que verifica que el cliente no tenga deudas vencidas y retorna un client
+	 * @param clientId client id
+	 * @return client
+	 */
+	private Mono<ClientDto> checkDebts(String clientId){
+		return feignApiProdActive.getDeuda(clientId)
+						.single()
+						.flatMap(value -> {
+							if(Boolean.TRUE.equals(value))
+								return Mono.error(new CustomException(HttpStatus.CONFLICT, "Cliente tiene deudas vencidas"));
+							else
+								return feignApiClient.getClient(clientId).single();
+						});
+	}
 }

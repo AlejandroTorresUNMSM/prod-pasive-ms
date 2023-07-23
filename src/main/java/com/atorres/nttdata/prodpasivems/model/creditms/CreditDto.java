@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 
 @Data
 @Builder
-public class CreditDao {
+public class CreditDto {
     @Id
     private String id;
     private BigDecimal balance;

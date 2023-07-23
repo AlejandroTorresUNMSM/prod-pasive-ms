@@ -1,7 +1,7 @@
 package com.atorres.nttdata.prodpasivems.utils;
 
 import com.atorres.nttdata.prodpasivems.model.RequestAccount;
-import com.atorres.nttdata.prodpasivems.model.creditms.CreditDao;
+import com.atorres.nttdata.prodpasivems.model.creditms.CreditDto;
 import com.atorres.nttdata.prodpasivems.model.creditms.RequestCredit;
 import com.atorres.nttdata.prodpasivems.model.dao.AccountDao;
 import com.atorres.nttdata.prodpasivems.model.dto.AccountDto;
@@ -37,8 +37,8 @@ public class RequestMapper {
         return accountDto;
     }
 
-    public CreditDao requestToDao(RequestCredit requestCredit){
-        return CreditDao.builder()
+    public CreditDto requestToDao(RequestCredit requestCredit){
+        return CreditDto.builder()
                 .id(generateId())
                 .balance(requestCredit.getBalance())
                 .debt(requestCredit.getBalance())

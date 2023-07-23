@@ -7,3 +7,6 @@ spring:
 client:
   ms:
     url: http://localhost:8080/api/client
+prodactive:
+  ms:
+    url: http://localhost:8082/api/credit

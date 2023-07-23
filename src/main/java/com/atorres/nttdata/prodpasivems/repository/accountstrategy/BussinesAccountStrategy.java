@@ -1,7 +1,7 @@
 package com.atorres.nttdata.prodpasivems.repository.accountstrategy;
 
 import com.atorres.nttdata.prodpasivems.exception.CustomException;
-import com.atorres.nttdata.prodpasivems.model.creditms.CreditDao;
+import com.atorres.nttdata.prodpasivems.model.creditms.CreditDto;
 import com.atorres.nttdata.prodpasivems.model.dto.AccountDto;
 import com.atorres.nttdata.prodpasivems.utils.AccountCategory;
 import com.atorres.nttdata.prodpasivems.utils.AccountType;
@@ -20,7 +20,7 @@ public class BussinesAccountStrategy implements  AccountStrategy{
      * @return boolean
      */
     @Override
-    public Mono<Boolean> verifyClient(Flux<AccountDto> listaAccount, Mono<AccountCategory> accountCategory, Flux<CreditDao> listCredit){
+    public Mono<Boolean> verifyClient(Flux<AccountDto> listaAccount, Mono<AccountCategory> accountCategory, Flux<CreditDto> listCredit){
         return accountCategory.filter(enumValue -> enumValue.equals(AccountCategory.MYPE) || enumValue.equals(AccountCategory.NORMAL))
                 .switchIfEmpty(Mono.error(new CustomException(HttpStatus.BAD_REQUEST,"Las cuentas bussines no pueden ser VIP")))
                 .flatMap(enumValue -> enumValue.equals(AccountCategory.MYPE)? verifyMype(listaAccount,listCredit) : Mono.just(true))
@@ -46,7 +46,7 @@ public class BussinesAccountStrategy implements  AccountStrategy{
      * @param listCredit lisa creditos
      * @return boolean
      */
-    public Mono<Boolean> verifyMype(Flux<AccountDto> listAccount,Flux<CreditDao> listCredit) {
+    public Mono<Boolean> verifyMype(Flux<AccountDto> listAccount,Flux<CreditDto> listCredit) {
         return listCredit.any(credit -> true)
                 .flatMap(ac -> Boolean.TRUE.equals(ac) ? verifyMypeAccount(listAccount) : Mono.error(new CustomException(HttpStatus.BAD_REQUEST,"El cliente MYPE tiene que tener al menos un credito")));
     }

@@ -1,9 +1,7 @@
 package com.atorres.nttdata.prodpasivems.controller;
 
-import com.atorres.nttdata.prodpasivems.client.ClientApiClient;
 import com.atorres.nttdata.prodpasivems.client.FeignApiClient;
 import com.atorres.nttdata.prodpasivems.model.RequestAccount;
-import com.atorres.nttdata.prodpasivems.model.clientms.ClientDto;
 import com.atorres.nttdata.prodpasivems.model.dto.AccountDto;
 import com.atorres.nttdata.prodpasivems.service.AccountService;
 import lombok.extern.slf4j.Slf4j;
