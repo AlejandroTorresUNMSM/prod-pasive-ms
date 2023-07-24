@@ -1,4 +1,4 @@
-package com.atorres.nttdata.prodpasivems.repository.accountstrategy;
+package com.atorres.nttdata.prodpasivems.service.accountstrategy;
 
 import com.atorres.nttdata.prodpasivems.exception.CustomException;
 import com.atorres.nttdata.prodpasivems.model.creditms.CreditDto;

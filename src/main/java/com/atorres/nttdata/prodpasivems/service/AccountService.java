@@ -10,8 +10,8 @@ import com.atorres.nttdata.prodpasivems.model.creditms.CreditDto;
 import com.atorres.nttdata.prodpasivems.model.dao.AccountDao;
 import com.atorres.nttdata.prodpasivems.model.dto.AccountDto;
 import com.atorres.nttdata.prodpasivems.repository.AccountRepository;
-import com.atorres.nttdata.prodpasivems.repository.accountstrategy.AccountStrategy;
-import com.atorres.nttdata.prodpasivems.repository.accountstrategy.AccountStrategyFactory;
+import com.atorres.nttdata.prodpasivems.service.accountstrategy.AccountStrategy;
+import com.atorres.nttdata.prodpasivems.service.accountstrategy.AccountStrategyFactory;
 import com.atorres.nttdata.prodpasivems.utils.RequestMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,7 +59,6 @@ public class AccountService {
             .filter(ac -> ac.getId().equals(productId))
             .switchIfEmpty(Mono.error(new CustomException(HttpStatus.NOT_FOUND, "No existe la cuenta")))
             .single()
-            .flatMap(ac -> accountRepository.findById(productId))
 						.map(requestMapper::accountToDto);
   }
 
@@ -83,7 +82,7 @@ public class AccountService {
             })
 						.flatMap(exist -> Boolean.FALSE.equals(exist)
 										? Mono.error(new CustomException(HttpStatus.BAD_REQUEST, "La cuenta no cumplen los requisitos"))
-										: accountRepository.save(requestMapper.accountToDao(requestAccount)))
+										: accountRepository.save(requestMapper.accountToDao(requestAccount,clientId)))
 						.map(requestMapper::accountToDto);
   }
 
@@ -116,14 +115,15 @@ public class AccountService {
 	 * @param request request
 	 * @return cuenta
 	 */
-  public Mono<AccountDao> update(RequestUpdateAccount request) {
+  public Mono<AccountDto> update(RequestUpdateAccount request) {
     return accountRepository.findById(request.getAccountId())
             .switchIfEmpty(Mono.error(new CustomException(HttpStatus.NOT_FOUND, "No la cuenta")))
 						.flatMap(account -> {
 							//Actualizando balance
 							account.setBalance(request.getBalance());
 							return accountRepository.save(account);
-						});
+						})
+						.map(requestMapper::accountToDto);
   }
 
 	/**

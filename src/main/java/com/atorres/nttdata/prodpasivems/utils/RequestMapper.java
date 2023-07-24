@@ -9,12 +9,13 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class RequestMapper {
-    public AccountDao accountToDao(RequestAccount requestAccount){
+    public AccountDao accountToDao(RequestAccount requestAccount,String clientId){
         return AccountDao.builder()
                 .id(generateId())
                 .type(requestAccount.getType())
                 .balance(requestAccount.getBalance())
                 .accountCategory(requestAccount.getAccountCategory())
+                .client(clientId)
                 .build();
     }
 
@@ -29,7 +30,7 @@ public class RequestMapper {
     }
     public AccountDto accountToDto(AccountDao accountDao){
         AccountDto accountDto= new AccountDto();
-        accountDto.setId(accountDto.getId());
+        accountDto.setId(accountDao.getId());
         accountDto.setType(accountDao.getType());
         accountDto.setAccountCategory(accountDao.getAccountCategory());
         accountDto.setBalance(accountDao.getBalance());
